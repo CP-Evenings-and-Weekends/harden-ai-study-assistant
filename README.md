@@ -1,6 +1,6 @@
 # Harden the AI Study Assistant
 
-Take today's [AI Ethics + Limitations lesson](https://github.com/CP-Evenings-and-Weekends/curriculum/blob/main/Module_06_AI_LLMs/week17/day4/README.md) and apply three concrete security mitigations to the [AI Study Assistant](https://github.com/CP-Evenings-and-Weekends/ai-study-assistant) you built Wednesday.
+Take today's [AI Ethics + Limitations lesson](https://github.com/CP-Evenings-and-Weekends/curriculum/blob/main/Module_06_AI_LLMs/week17/day4/README.md) and apply three concrete security mitigations to the [AI Study Assistant](https://github.com/CP-Evenings-and-Weekends/ai-study-assistant) you built Thursday.
 
 Each mitigation is something that ought to exist in any LLM application you deploy.  Each one also needs to be **verifiable** — you should be able to demonstrate the unhardened version is exploitable and the hardened version isn't.
 
