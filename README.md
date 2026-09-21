@@ -1,10 +1,10 @@
 # Harden the AI Study Assistant
 
-Take today's [AI Ethics + Limitations lesson](https://github.com/CP-Evenings-and-Weekends/curriculum/blob/main/Module_06_AI_LLMs/week17/day4/README.md) and apply three concrete security mitigations to the [AI Study Assistant](https://github.com/CP-Evenings-and-Weekends/ai-study-assistant) you built Thursday.
+Take today's [AI Ethics + Limitations lesson](https://github.com/CP-Evenings-and-Weekends/curriculum/blob/main/Module_06_AI_LLMs/week17/day4/README.md) and apply **two** concrete security mitigations to the [AI Study Assistant](https://github.com/CP-Evenings-and-Weekends/ai-study-assistant) you completed Thursday: prompt injection defense and rate limiting. A third mitigation, output moderation, is the stretch goal.
 
 Each mitigation is something that ought to exist in any LLM application you deploy.  Each one also needs to be **verifiable** — you should be able to demonstrate the unhardened version is exploitable and the hardened version isn't.
 
-Work on your own week17/day3 capstone code — don't clone anything new here.
+Work on your own Study Assistant code from this week — don't clone anything new here.
 
 ## Mitigation 1 — Prompt injection defense (inputs + uploaded docs)
 
@@ -44,7 +44,7 @@ curl -X POST http://localhost:8000/api/conversations/1/ask/ \
 LLM calls cost money.  An attacker (or a buggy frontend) can rack up your bill in minutes if you don't cap the request rate.
 
 ### Requirements
-- Use DRF's [`UserRateThrottle`](https://www.django-rest-framework.org/api-guide/throttling/) (or `AnonRateThrottle`) on the `conversation_ask` view
+- Use DRF's [`UserRateThrottle`](https://www.django-rest-framework.org/api-guide/throttling/) (or `AnonRateThrottle`) on both ask views (`ask_question` and `conversation_ask`)
 - Default the rate to **10 requests per minute** per user (or per IP if you haven't added auth yet)
 - Return `429 Too Many Requests` with a clear error body when the throttle trips
 - The document ingest endpoint should also be throttled — but more leniently (say `20/hour`) since embeddings cost less but ingest can drop large docs
@@ -63,7 +63,9 @@ done
 
 You should see a few `200`s followed by `429`s.
 
-## Mitigation 3 — Output moderation
+## Stretch Mitigation — Output moderation
+
+This one is optional. If the two required mitigations are done and demonstrated, this is the most valuable next layer.
 
 LLMs can produce harmful content.  Even with a well-engineered system prompt, you should review what the model returns **before** sending it to the user.
 
@@ -97,7 +99,6 @@ Check your server log to confirm the original LLM response was captured before b
 - **PII redaction on the way IN**: before sending a question to the embedding API, run a regex pass that replaces emails, phone numbers, SSN-shaped strings with `[REDACTED]` placeholders.
 - **Spend cap**: configure a hard monthly spend limit on the OpenAI API key itself (Console → Limits) and add a server-side soft cap that returns 503 once a daily budget is hit.
 - **Audit log**: store every (user, question, retrieved chunks, LLM answer, moderation result) tuple in a `RequestLog` model.  Useful for incident review.
-- **Second-pass LLM validator**: instead of (or in addition to) the moderation endpoint, make a second LLM call asking "Does the following response violate <policy>?  Answer yes/no."  Block on yes.
 - **Per-user spend tracking**: count tokens per user and rate-limit (or refuse) once they exceed a daily quota.
 
 > Stuck? Have a code error? Use the ["4 Before Me"](https://docs.google.com/document/d/1nseOs5oabYBKNHfwJZNAR7GlU0zkZxNagsw63AD7XV0/edit) debugging checklist to help you solve it!
