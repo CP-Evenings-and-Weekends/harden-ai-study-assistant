@@ -71,11 +71,11 @@ LLMs can produce harmful content.  Even with a well-engineered system prompt, yo
 
 ### Requirements
 - After `call_llm(messages)` returns, run the response through a moderation check — **implement any ONE of these; every setup in the module can complete this**:
-  1. **OpenAI key**: OpenAI's [moderation endpoint](https://platform.openai.com/docs/guides/moderation/overview) — `POST /v1/moderations` with `input=<the answer>`; flagged when `results[0].flagged == True`.
-  2. **Ollama-only (no paid key)**: a local safety classifier — `ollama pull llama-guard3`, then send the answer to it and parse its safe/unsafe verdict.
+  1. **Class Ollama stack (free, local)**: a local safety classifier — `ollama pull llama-guard3:1b` (about 1.6GB), then send the answer to it as a chat message and parse its verdict: the reply is `safe`, or `unsafe` plus a category code. The lesson has the full code.
+  2. **OpenAI key (paid path)**: OpenAI's [moderation endpoint](https://platform.openai.com/docs/guides/moderation/overview) — `POST /v1/moderations` with `input=<the answer>`; flagged when `results[0].flagged == True`.
   3. **Any provider**: a second-pass LLM judge — one extra call asking *"Does this response violate our content guidelines? Answer exactly SAFE or UNSAFE."*  Weakest of the three, but universally available.
 - On a flag, **do not** return the LLM's answer.  Instead return a generic safe response like *"I can't help with that. Please ask a different question."* and log the flagged response server-side (don't show the user what was filtered — that defeats the purpose).
-- Whichever path you chose, note its latency cost in a comment (the OpenAI endpoint is ~50-100ms; a local model or judge call is more).
+- Whichever path you chose, note its latency cost in a comment (a local classifier or judge call adds noticeable time per request; the hosted OpenAI endpoint is ~50-100ms).
 
 ### Verify
 
@@ -97,7 +97,7 @@ Check your server log to confirm the original LLM response was captured before b
 
 ## Stretch
 - **PII redaction on the way IN**: before sending a question to the embedding API, run a regex pass that replaces emails, phone numbers, SSN-shaped strings with `[REDACTED]` placeholders.
-- **Spend cap**: configure a hard monthly spend limit on the OpenAI API key itself (Console → Limits) and add a server-side soft cap that returns 503 once a daily budget is hit.
+- **Spend cap** (OpenAI path only): configure a hard monthly spend limit on the API key itself (Console → Limits) and add a server-side soft cap that returns 503 once a daily budget is hit. On the free local stack there is no bill to cap, but the server-side soft cap is still worth building — swap "budget" for "request count".
 - **Audit log**: store every (user, question, retrieved chunks, LLM answer, moderation result) tuple in a `RequestLog` model.  Useful for incident review.
 - **Per-user spend tracking**: count tokens per user and rate-limit (or refuse) once they exceed a daily quota.
 
